@@ -5,6 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.core.graphics.toColorInt
 import com.essaid.user.di.AppContainer
 import com.essaid.user.presentation.registration.RegisterScreen
 import com.essaid.user.presentation.registration.RegisterViewModel
@@ -18,12 +23,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        window.decorView.setBackgroundColor("#F8FAFB".toColorInt())
         setContent {
             EssAidTheme {
-                RegisterScreen(
-                    viewModel = registerViewModel,
-                    demoMode = BuildConfig.USE_MOCK_API,
-                )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    RegisterScreen(
+                        viewModel = registerViewModel,
+                        demoMode = BuildConfig.USE_MOCK_API,
+                    )
+                }
             }
         }
     }
