@@ -3,6 +3,7 @@ package com.essaid.user.presentation.profile
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -22,6 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,23 +57,87 @@ fun PatientProfileScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
                 text = "Mi Perfil Personal y Médico",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
-            OutlinedButton(
-                onClick = { viewModel.loadProfile(token) },
-                enabled = state.status != ProfileStatus.Loading,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.padding(4.dp))
-                Text("Actualizar")
+                if (state.status == ProfileStatus.Success && !state.isEditing) {
+                    Button(
+                        onClick = { viewModel.startEditing() },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.padding(4.dp))
+                        Text("Editar")
+                    }
+                }
+                OutlinedButton(
+                    onClick = { viewModel.loadProfile(token) },
+                    enabled = state.status != ProfileStatus.Loading && !state.isUpdating,
+                    modifier = if (state.status == ProfileStatus.Success && !state.isEditing) Modifier.weight(1f) else Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    Text("Actualizar")
+                }
+            }
+        }
+
+        // Success / General Error message banners
+        state.successMessage?.let { msg ->
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Text(
+                        text = msg,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedButton(onClick = { viewModel.clearSuccessMessage() }) {
+                        Text("OK")
+                    }
+                }
+            }
+        }
+
+        if (state.errorMessage != null && state.status == ProfileStatus.Success) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                    Text(
+                        text = state.errorMessage ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
 
@@ -136,9 +203,133 @@ fun PatientProfileScreen(
                 }
             }
             ProfileStatus.Success -> {
-                state.profile?.let { profile ->
-                    PersonalSection(profile.personal)
-                    MedicalSection(profile.medical)
+                if (state.isEditing) {
+                    EditProfileSection(
+                        viewModel = viewModel,
+                        token = token,
+                    )
+                } else {
+                    state.profile?.let { profile ->
+                        PersonalSection(profile.personal)
+                        MedicalSection(profile.medical)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditProfileSection(
+    viewModel: PatientProfileViewModel,
+    token: String,
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val form = state.updateForm
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Editar Perfil (Campos Autorizados)",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = "Puedes actualizar tu número celular, contacto de emergencia y datos médicos.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            OutlinedTextField(
+                value = form.celular,
+                onValueChange = viewModel::onCelularChanged,
+                label = { Text("Celular (*)") },
+                isError = state.errorFor("celular") != null,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            state.errorFor("celular")?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            OutlinedTextField(
+                value = form.contactoEmergenciaNombre,
+                onValueChange = viewModel::onContactoEmergenciaNombreChanged,
+                label = { Text("Contacto de Emergencia (Nombre)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+
+            OutlinedTextField(
+                value = form.contactoEmergenciaTelefono,
+                onValueChange = viewModel::onContactoEmergenciaTelefonoChanged,
+                label = { Text("Contacto de Emergencia (Teléfono)") },
+                isError = state.errorFor("contactoEmergenciaTelefono") != null,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            state.errorFor("contactoEmergenciaTelefono")?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            OutlinedTextField(
+                value = form.alergias,
+                onValueChange = viewModel::onAlergiasChanged,
+                label = { Text("Alergias (separadas por coma)") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OutlinedTextField(
+                value = form.condicionesCronicas,
+                onValueChange = viewModel::onCondicionesCronicasChanged,
+                label = { Text("Condiciones Crónicas (separadas por coma)") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OutlinedTextField(
+                value = form.medicamentosActuales,
+                onValueChange = viewModel::onMedicamentosActualesChanged,
+                label = { Text("Medicamentos Actuales (separados por coma)") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OutlinedTextField(
+                value = form.observacionesMedicas,
+                onValueChange = viewModel::onObservacionesMedicasChanged,
+                label = { Text("Observaciones Médicas") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedButton(
+                    onClick = { viewModel.cancelEditing() },
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isUpdating,
+                ) {
+                    Text("Cancelar")
+                }
+                Button(
+                    onClick = { viewModel.updateProfile(token) },
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isUpdating,
+                ) {
+                    if (state.isUpdating) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text("Guardar Cambios")
+                    }
                 }
             }
         }
@@ -152,13 +343,13 @@ private fun PersonalSection(personal: PersonalPatientInfo) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 text = "Información Personal",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             InfoRow("Nombres y Apellidos", "${personal.nombre} ${personal.apellido}")
             InfoRow("Correo Electrónico", personal.email)
             InfoRow("Documento de Identidad", "${personal.tipoDocumento}: ${personal.numeroDocumento}")
@@ -176,13 +367,13 @@ private fun MedicalSection(medical: MedicalPatientInfo) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 text = "Información Médica",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             InfoRow("Tipo de Sangre", medical.tipoSangre ?: "No especificado")
             InfoRow("Alergias", if (medical.alergias.isNotEmpty()) medical.alergias.joinToString(", ") else "Ninguna registrada")
             InfoRow("Condiciones Crónicas", if (medical.condicionesCronicas.isNotEmpty()) medical.condicionesCronicas.joinToString(", ") else "Ninguna registrada")
@@ -198,14 +389,16 @@ private fun MedicalSection(medical: MedicalPatientInfo) {
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
         )
         Text(
             text = value,
