@@ -97,6 +97,17 @@ class LoginViewModelTest {
         assertEquals(LoginStatus.InactiveAccount, viewModel.uiState.value.status)
     }
 
+    @Test
+    fun `prefillEmailAndNotice updates email and notice message`() {
+        val repository = RecordingRepository(LoginOutcome.Success(AuthSession("t", AuthenticatedUser(email = "e"))))
+        val viewModel = LoginViewModel(repository)
+
+        viewModel.prefillEmailAndNotice("nuevo@tecsup.edu.pe", "¡Registro exitoso!")
+
+        assertEquals("nuevo@tecsup.edu.pe", viewModel.uiState.value.form.email)
+        assertEquals("¡Registro exitoso!", viewModel.uiState.value.noticeMessage)
+    }
+
     private class RecordingRepository(
         private val outcome: LoginOutcome,
     ) : UserLoginRepository {

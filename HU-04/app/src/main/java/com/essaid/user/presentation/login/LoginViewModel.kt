@@ -29,6 +29,7 @@ data class LoginUiState(
     val fieldErrors: Map<String, String> = emptyMap(),
     val status: LoginStatus = LoginStatus.Idle,
     val message: String? = null,
+    val noticeMessage: String? = null,
 ) {
     val isLoading: Boolean
         get() = status == LoginStatus.Loading
@@ -41,6 +42,18 @@ class LoginViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    fun prefillEmailAndNotice(email: String, notice: String) {
+        _uiState.update {
+            it.copy(
+                form = LoginForm(email = email, password = ""),
+                fieldErrors = emptyMap(),
+                status = LoginStatus.Idle,
+                message = null,
+                noticeMessage = notice,
+            )
+        }
+    }
 
     fun onEmailChanged(value: String) = updateForm(LoginField.Email) {
         it.copy(email = value)
@@ -133,6 +146,7 @@ class LoginViewModel(
                 fieldErrors = errors,
                 status = LoginStatus.Idle,
                 message = null,
+                noticeMessage = null,
             )
         }
     }

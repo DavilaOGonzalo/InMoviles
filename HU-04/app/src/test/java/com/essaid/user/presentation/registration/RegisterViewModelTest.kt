@@ -62,6 +62,7 @@ class RegisterViewModelTest {
 
         assertEquals(RegistrationStatus.Success, viewModel.uiState.value.status)
         assertEquals("Cuenta creada.", viewModel.uiState.value.message)
+        assertEquals("persona@tecsup.edu.pe", viewModel.lastRegisteredEmail)
         assertEquals("", viewModel.uiState.value.form.password1)
         assertEquals("", viewModel.uiState.value.form.password2)
         assertEquals("persona@tecsup.edu.pe", repository.received?.email)

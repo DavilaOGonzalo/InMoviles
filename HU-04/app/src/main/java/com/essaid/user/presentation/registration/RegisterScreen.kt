@@ -38,6 +38,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,14 +52,24 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.essaid.user.domain.model.RegistrationField
+import kotlinx.coroutines.delay
 
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel,
     demoMode: Boolean,
     onNavigateBack: () -> Unit,
+    onRegistrationSuccess: (String) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.status) {
+        if (state.status == RegistrationStatus.Success) {
+            delay(1200)
+            val registeredEmail = viewModel.lastRegisteredEmail.ifBlank { state.form.email }
+            onRegistrationSuccess(registeredEmail)
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -187,23 +198,39 @@ fun RegisterScreen(
                     )
                 }
 
-                Button(
-                    onClick = viewModel::submit,
-                    enabled = !state.isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        Text("Crear cuenta")
+                if (state.status == RegistrationStatus.Success) {
+                    Button(
+                        onClick = {
+                            val registeredEmail = viewModel.lastRegisteredEmail.ifBlank { state.form.email }
+                            onRegistrationSuccess(registeredEmail)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        contentPadding = PaddingValues(horizontal = 20.dp),
+                    ) {
+                        Text("Ir a Iniciar Sesión")
+                    }
+                } else {
+                    Button(
+                        onClick = viewModel::submit,
+                        enabled = !state.isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        contentPadding = PaddingValues(horizontal = 20.dp),
+                    ) {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Text("Crear cuenta")
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.size(8.dp))

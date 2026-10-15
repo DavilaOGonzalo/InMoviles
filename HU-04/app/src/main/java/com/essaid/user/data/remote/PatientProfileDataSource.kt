@@ -6,7 +6,6 @@ import com.essaid.user.domain.model.PatientProfileOutcome
 import com.essaid.user.domain.model.PatientProfileUpdateForm
 import com.essaid.user.domain.model.PatientProfileUpdateOutcome
 import com.essaid.user.domain.model.PersonalPatientInfo
-import com.essaid.user.domain.validation.ProfileUpdateValidator
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -18,67 +17,11 @@ interface PatientProfileDataSource {
 
 class MockPatientProfileDataSource : PatientProfileDataSource {
     override suspend fun getProfile(token: String): PatientProfileOutcome {
-        if (token.isBlank() || token == "invalid-token") {
-            return PatientProfileOutcome.Unauthorized()
-        }
-        val profile = PatientProfile(
-            personal = PersonalPatientInfo(
-                id = 101L,
-                email = "paciente@tecsup.edu.pe",
-                nombre = "Juan Carlos",
-                apellido = "Pérez Gómez",
-                tipoDocumento = "DNI",
-                numeroDocumento = "72345678",
-                celular = "987654321",
-                fechaNacimiento = "15/05/2000",
-                genero = "Masculino"
-            ),
-            medical = MedicalPatientInfo(
-                tipoSangre = "O+",
-                alergias = listOf("Penicilina"),
-                condicionesCronicas = listOf("Ninguna registrada"),
-                medicamentosActuales = listOf("Ninguno"),
-                contactoEmergenciaNombre = "María Gómez (Madre)",
-                contactoEmergenciaTelefono = "912345678",
-                observacionesMedicas = "Paciente apto para actividades generales. Sin restricciones agudas.",
-                ultimaActualizacion = "2026-03-01"
-            )
-        )
-        return PatientProfileOutcome.Success(profile)
+        return MockUserDataStore.getProfile(token)
     }
 
     override suspend fun updateProfile(token: String, form: PatientProfileUpdateForm): PatientProfileUpdateOutcome {
-        if (token.isBlank() || token == "invalid-token") {
-            return PatientProfileUpdateOutcome.Unauthorized()
-        }
-        val errors = ProfileUpdateValidator.validate(form)
-        if (errors.isNotEmpty()) {
-            return PatientProfileUpdateOutcome.ValidationError(fieldErrors = errors)
-        }
-        val updatedProfile = PatientProfile(
-            personal = PersonalPatientInfo(
-                id = 101L,
-                email = "paciente@tecsup.edu.pe",
-                nombre = "Juan Carlos",
-                apellido = "Pérez Gómez",
-                tipoDocumento = "DNI",
-                numeroDocumento = "72345678",
-                celular = form.celular.trim(),
-                fechaNacimiento = "15/05/2000",
-                genero = "Masculino"
-            ),
-            medical = MedicalPatientInfo(
-                tipoSangre = "O+",
-                alergias = form.toMedicalList(form.alergias),
-                condicionesCronicas = form.toMedicalList(form.condicionesCronicas),
-                medicamentosActuales = form.toMedicalList(form.medicamentosActuales),
-                contactoEmergenciaNombre = form.contactoEmergenciaNombre.ifBlank { null },
-                contactoEmergenciaTelefono = form.contactoEmergenciaTelefono.ifBlank { null },
-                observacionesMedicas = form.observacionesMedicas.ifBlank { null },
-                ultimaActualizacion = "2026-03-02"
-            )
-        )
-        return PatientProfileUpdateOutcome.Success(updatedProfile)
+        return MockUserDataStore.updateProfile(token, form)
     }
 }
 
