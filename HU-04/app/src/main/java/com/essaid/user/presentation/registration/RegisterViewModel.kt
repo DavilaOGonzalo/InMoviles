@@ -41,6 +41,9 @@ class RegisterViewModel(
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
+    var lastRegisteredEmail: String = ""
+        private set
+
     fun onEmailChanged(value: String) = updateForm(RegistrationField.Email) {
         it.copy(email = value)
     }
@@ -101,6 +104,7 @@ class RegisterViewModel(
         }
 
         val request = current.form.toRequest()
+        val submittedEmail = request.email
         _uiState.value = current.copy(
             fieldErrors = emptyMap(),
             status = RegistrationStatus.Loading,
@@ -109,11 +113,14 @@ class RegisterViewModel(
 
         viewModelScope.launch {
             when (val outcome = repository.register(request)) {
-                is RegistrationOutcome.Success -> _uiState.update {
-                    RegisterUiState(
-                        status = RegistrationStatus.Success,
-                        message = outcome.message,
-                    )
+                is RegistrationOutcome.Success -> {
+                    lastRegisteredEmail = submittedEmail
+                    _uiState.update {
+                        RegisterUiState(
+                            status = RegistrationStatus.Success,
+                            message = outcome.message,
+                        )
+                    }
                 }
 
                 is RegistrationOutcome.ValidationError -> _uiState.update {

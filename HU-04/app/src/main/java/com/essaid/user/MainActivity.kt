@@ -60,6 +60,13 @@ class MainActivity : ComponentActivity() {
                                 viewModel = registerViewModel,
                                 demoMode = BuildConfig.USE_MOCK_API,
                                 onNavigateBack = { currentScreen = "login" },
+                                onRegistrationSuccess = { registeredEmail ->
+                                    loginViewModel.prefillEmailAndNotice(
+                                        email = registeredEmail,
+                                        notice = "¡Registro exitoso! Inicia sesión con tu correo."
+                                    )
+                                    currentScreen = "login"
+                                }
                             )
                         }
                         else -> {
