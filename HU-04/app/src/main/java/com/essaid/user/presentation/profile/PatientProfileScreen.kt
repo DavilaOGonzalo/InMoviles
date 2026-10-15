@@ -3,7 +3,6 @@ package com.essaid.user.presentation.profile
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,50 +50,20 @@ fun PatientProfileScreen(
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = "Mi Perfil Personal y Médico",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (state.status == ProfileStatus.Success && !state.isEditing) {
-                    Button(
-                        onClick = { viewModel.startEditing() },
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.padding(4.dp))
-                        Text("Editar")
-                    }
-                }
-                OutlinedButton(
-                    onClick = { viewModel.loadProfile(token) },
-                    enabled = state.status != ProfileStatus.Loading && !state.isUpdating,
-                    modifier = if (state.status == ProfileStatus.Success && !state.isEditing) Modifier.weight(1f) else Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.padding(4.dp))
-                    Text("Actualizar")
-                }
-            }
-        }
 
         // Success / General Error message banners
         state.successMessage?.let { msg ->
@@ -206,12 +176,63 @@ fun PatientProfileScreen(
                 if (state.isEditing) {
                     EditProfileSection(
                         viewModel = viewModel,
-                        token = token,
                     )
                 } else {
                     state.profile?.let { profile ->
                         PersonalSection(profile.personal)
                         MedicalSection(profile.medical)
+                    }
+                }
+            }
+        }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (state.isEditing) {
+                OutlinedButton(
+                    onClick = viewModel::cancelEditing,
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isUpdating,
+                ) {
+                    Text("Cancelar")
+                }
+                Button(
+                    onClick = { viewModel.updateProfile(token) },
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isUpdating,
+                ) {
+                    if (state.isUpdating) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    } else {
+                        Text("Guardar Cambios")
+                    }
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { viewModel.loadProfile(token) },
+                    modifier = Modifier.weight(1f),
+                    enabled = state.status != ProfileStatus.Loading && !state.isUpdating,
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    Text("Actualizar")
+                }
+                if (state.status == ProfileStatus.Success) {
+                    Button(
+                        onClick = viewModel::startEditing,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.padding(4.dp))
+                        Text("Editar")
                     }
                 }
             }
@@ -222,7 +243,6 @@ fun PatientProfileScreen(
 @Composable
 private fun EditProfileSection(
     viewModel: PatientProfileViewModel,
-    token: String,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val form = state.updateForm
@@ -307,31 +327,6 @@ private fun EditProfileSection(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedButton(
-                    onClick = { viewModel.cancelEditing() },
-                    modifier = Modifier.weight(1f),
-                    enabled = !state.isUpdating,
-                ) {
-                    Text("Cancelar")
-                }
-                Button(
-                    onClick = { viewModel.updateProfile(token) },
-                    modifier = Modifier.weight(1f),
-                    enabled = !state.isUpdating,
-                ) {
-                    if (state.isUpdating) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
-                    } else {
-                        Text("Guardar Cambios")
-                    }
-                }
-            }
         }
     }
 }
@@ -389,21 +384,27 @@ private fun MedicalSection(medical: MedicalPatientInfo) {
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
