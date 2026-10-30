@@ -30,11 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.essaid.user.domain.model.PatientSearchResult
+import com.essaid.user.presentation.patienthistory.PatientMedicalHistoryScreen
+import com.essaid.user.presentation.patienthistory.PatientMedicalHistoryViewModel
 
 @Composable
 fun PatientSearchScreen(
     viewModel: PatientSearchViewModel,
+    medicalHistoryViewModel: PatientMedicalHistoryViewModel,
     token: String,
+    isDemoMode: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -56,7 +60,13 @@ fun PatientSearchScreen(
                 Spacer(Modifier.size(8.dp))
                 Text("Volver a resultados")
             }
-            PatientSummary(patient)
+            PatientSummary(patient, isDemoMode)
+            PatientMedicalHistoryScreen(
+                viewModel = medicalHistoryViewModel,
+                token = token,
+                patient = patient,
+                isDemoMode = isDemoMode,
+            )
             return@Column
         }
 
@@ -138,7 +148,7 @@ private fun PatientResultCard(patient: PatientSearchResult, onClick: () -> Unit)
 }
 
 @Composable
-private fun PatientSummary(patient: PatientSearchResult) {
+private fun PatientSummary(patient: PatientSearchResult, isDemoMode: Boolean) {
     Text("Perfil del paciente", style = MaterialTheme.typography.titleLarge)
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -172,12 +182,14 @@ private fun PatientSummary(patient: PatientSearchResult) {
         "Última Actualización",
         patient.informacionMedicaActualizada ?: "No registrada",
     )
-    Text(
-        "Datos ficticios de demostración. Confirma la información médica con el paciente.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(vertical = 12.dp),
-    )
+    if (isDemoMode) {
+        Text(
+            "Datos ficticios de demostración. Confirma la información médica con el paciente.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(vertical = 12.dp),
+        )
+    }
 }
 
 @Composable
