@@ -10,14 +10,19 @@ import com.essaid.user.data.remote.MockPatientSearchDataSource
 import com.essaid.user.data.remote.MockUserLoginDataSource
 import com.essaid.user.data.remote.MockUserRegistrationDataSource
 import com.essaid.user.data.remote.PatientProfileDataSource
+import com.essaid.user.data.remote.DjangoPatientMedicalHistoryHttpClient
+import com.essaid.user.data.remote.MockPatientMedicalHistoryDataSource
+import com.essaid.user.data.remote.PatientMedicalHistoryDataSource
 import com.essaid.user.data.remote.PatientSearchDataSource
 import com.essaid.user.data.remote.UserLoginDataSource
 import com.essaid.user.data.remote.UserRegistrationDataSource
 import com.essaid.user.data.repository.DefaultPatientProfileRepository
+import com.essaid.user.data.repository.DefaultPatientMedicalHistoryRepository
 import com.essaid.user.data.repository.DefaultPatientSearchRepository
 import com.essaid.user.data.repository.DefaultUserLoginRepository
 import com.essaid.user.data.repository.DefaultUserRegistrationRepository
 import com.essaid.user.data.repository.PatientProfileRepository
+import com.essaid.user.data.repository.PatientMedicalHistoryRepository
 import com.essaid.user.data.repository.PatientSearchRepository
 import com.essaid.user.data.repository.UserLoginRepository
 import com.essaid.user.data.repository.UserRegistrationRepository
@@ -37,6 +42,10 @@ object AppContainer {
 
     val patientSearchRepository: PatientSearchRepository by lazy {
         DefaultPatientSearchRepository(patientSearchDataSource())
+    }
+
+    val patientMedicalHistoryRepository: PatientMedicalHistoryRepository by lazy {
+        DefaultPatientMedicalHistoryRepository(patientMedicalHistoryDataSource())
     }
 
     private fun registrationDataSource(): UserRegistrationDataSource =
@@ -65,5 +74,12 @@ object AppContainer {
             MockPatientSearchDataSource()
         } else {
             DjangoPatientSearchHttpClient(BuildConfig.ESSAID_API_BASE_URL)
+        }
+
+    private fun patientMedicalHistoryDataSource(): PatientMedicalHistoryDataSource =
+        if (BuildConfig.USE_MOCK_API) {
+            MockPatientMedicalHistoryDataSource()
+        } else {
+            DjangoPatientMedicalHistoryHttpClient(BuildConfig.ESSAID_API_BASE_URL)
         }
 }
