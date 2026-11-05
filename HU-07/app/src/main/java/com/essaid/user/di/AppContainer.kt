@@ -11,23 +11,23 @@ import com.essaid.user.data.remote.MockUserLoginDataSource
 import com.essaid.user.data.remote.MockUserRegistrationDataSource
 import com.essaid.user.data.remote.PatientProfileDataSource
 import com.essaid.user.data.remote.DjangoPatientMedicalHistoryHttpClient
-import com.essaid.user.data.remote.DjangoPatientConsultationHttpClient
 import com.essaid.user.data.remote.MockPatientMedicalHistoryDataSource
-import com.essaid.user.data.remote.MockPatientConsultationDataSource
 import com.essaid.user.data.remote.PatientMedicalHistoryDataSource
-import com.essaid.user.data.remote.PatientConsultationDataSource
+import com.essaid.user.data.remote.DjangoPatientAtencionesHttpClient
+import com.essaid.user.data.remote.MockPatientAtencionesDataSource
+import com.essaid.user.data.remote.PatientAtencionesDataSource
 import com.essaid.user.data.remote.PatientSearchDataSource
 import com.essaid.user.data.remote.UserLoginDataSource
 import com.essaid.user.data.remote.UserRegistrationDataSource
 import com.essaid.user.data.repository.DefaultPatientProfileRepository
 import com.essaid.user.data.repository.DefaultPatientMedicalHistoryRepository
-import com.essaid.user.data.repository.DefaultPatientConsultationRepository
 import com.essaid.user.data.repository.DefaultPatientSearchRepository
+import com.essaid.user.data.repository.DefaultPatientAtencionesRepository
 import com.essaid.user.data.repository.DefaultUserLoginRepository
 import com.essaid.user.data.repository.DefaultUserRegistrationRepository
 import com.essaid.user.data.repository.PatientProfileRepository
 import com.essaid.user.data.repository.PatientMedicalHistoryRepository
-import com.essaid.user.data.repository.PatientConsultationRepository
+import com.essaid.user.data.repository.PatientAtencionesRepository
 import com.essaid.user.data.repository.PatientSearchRepository
 import com.essaid.user.data.repository.UserLoginRepository
 import com.essaid.user.data.repository.UserRegistrationRepository
@@ -53,8 +53,8 @@ object AppContainer {
         DefaultPatientMedicalHistoryRepository(patientMedicalHistoryDataSource())
     }
 
-    val patientConsultationRepository: PatientConsultationRepository by lazy {
-        DefaultPatientConsultationRepository(patientConsultationDataSource())
+    val patientAtencionesRepository: PatientAtencionesRepository by lazy {
+        DefaultPatientAtencionesRepository(patientAtencionesDataSource())
     }
 
     private fun registrationDataSource(): UserRegistrationDataSource =
@@ -92,10 +92,10 @@ object AppContainer {
             DjangoPatientMedicalHistoryHttpClient(BuildConfig.ESSAID_API_BASE_URL)
         }
 
-    private fun patientConsultationDataSource(): PatientConsultationDataSource =
+    private fun patientAtencionesDataSource(): PatientAtencionesDataSource =
         if (BuildConfig.USE_MOCK_API) {
-            MockPatientConsultationDataSource()
+            MockPatientAtencionesDataSource()
         } else {
-            DjangoPatientConsultationHttpClient(BuildConfig.ESSAID_API_BASE_URL)
+            DjangoPatientAtencionesHttpClient(BuildConfig.ESSAID_API_BASE_URL)
         }
 }

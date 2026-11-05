@@ -32,14 +32,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.essaid.user.domain.model.PatientSearchResult
 import com.essaid.user.presentation.patienthistory.PatientMedicalHistoryScreen
 import com.essaid.user.presentation.patienthistory.PatientMedicalHistoryViewModel
-import com.essaid.user.presentation.patienthistory.PatientConsultationScreen
-import com.essaid.user.presentation.patienthistory.PatientConsultationViewModel
+import com.essaid.user.presentation.patienthistory.PatientAtencionesScreen
+import com.essaid.user.presentation.patienthistory.PatientAtencionesViewModel
 
 @Composable
 fun PatientSearchScreen(
     viewModel: PatientSearchViewModel,
     medicalHistoryViewModel: PatientMedicalHistoryViewModel,
-    consultationViewModel: PatientConsultationViewModel,
+    atencionesViewModel: PatientAtencionesViewModel,
     token: String,
     isDemoMode: Boolean,
     modifier: Modifier = Modifier,
@@ -70,8 +70,8 @@ fun PatientSearchScreen(
                 patient = patient,
                 isDemoMode = isDemoMode,
             )
-            PatientConsultationScreen(
-                viewModel = consultationViewModel,
+            PatientAtencionesScreen(
+                viewModel = atencionesViewModel,
                 token = token,
                 patient = patient,
                 isDemoMode = isDemoMode,

@@ -18,7 +18,7 @@ import com.essaid.user.domain.model.AuthSession
 import com.essaid.user.presentation.profile.PatientProfileScreen
 import com.essaid.user.presentation.profile.PatientProfileViewModel
 import com.essaid.user.presentation.patienthistory.PatientMedicalHistoryViewModel
-import com.essaid.user.presentation.patienthistory.PatientConsultationViewModel
+import com.essaid.user.presentation.patienthistory.PatientAtencionesViewModel
 import com.essaid.user.presentation.patientsearch.PatientSearchScreen
 import com.essaid.user.presentation.patientsearch.PatientSearchViewModel
 
@@ -39,8 +39,8 @@ fun HomeScreen(
     val patientMedicalHistoryViewModel = remember {
         PatientMedicalHistoryViewModel(AppContainer.patientMedicalHistoryRepository)
     }
-    val patientConsultationViewModel = remember {
-        PatientConsultationViewModel(AppContainer.patientConsultationRepository)
+    val patientAtencionesViewModel = remember {
+        PatientAtencionesViewModel(AppContainer.patientAtencionesRepository)
     }
     val homeRole = HomeRole.from(session.user.role)
 
@@ -70,7 +70,7 @@ fun HomeScreen(
                 HomeRole.Doctor -> PatientSearchScreen(
                     viewModel = searchViewModel,
                     medicalHistoryViewModel = patientMedicalHistoryViewModel,
-                    consultationViewModel = patientConsultationViewModel,
+                    atencionesViewModel = patientAtencionesViewModel,
                     token = session.token,
                     isDemoMode = BuildConfig.USE_MOCK_API,
                     modifier = Modifier.fillMaxWidth(),
