@@ -182,13 +182,15 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedButton(
-                onClick = onNavigateToRegister,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("¿No tienes cuenta? Regístrate aquí")
+            // Only show registration button if role is Patient
+            if (selectedRole == HomeRole.Patient) {
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onNavigateToRegister,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("¿No tienes cuenta? Regístrate aquí")
+                }
             }
         }
     }

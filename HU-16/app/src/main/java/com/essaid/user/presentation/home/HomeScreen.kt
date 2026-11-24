@@ -1,15 +1,21 @@
 package com.essaid.user.presentation.home
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.essaid.user.BuildConfig
 import com.essaid.user.di.AppContainer
 import com.essaid.user.domain.model.AuthSession
@@ -57,16 +63,6 @@ fun HomeScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text(if (homeRole == HomeRole.Patient) "Portal Paciente - EssAid" else "Portal Médico - EssAid") },
-                actions = {
-                    TextButton(onClick = onLogout) {
-                        Text("Cerrar Sesión")
-                    }
-                }
-            )
-        },
         bottomBar = {
             NavigationBar {
                 when (homeRole) {
@@ -74,18 +70,24 @@ fun HomeScreen(
                         NavigationBarItem(
                             selected = selectedTab == 0,
                             onClick = { selectedTab = 0 },
-                            icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                            label = { Text("Mi Perfil") }
+                            icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                            label = { Text("Inicio") }
                         )
                         NavigationBarItem(
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 },
-                            icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                            label = { Text("Hospitales") }
+                            icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                            label = { Text("Mi Perfil") }
                         )
                         NavigationBarItem(
                             selected = selectedTab == 2,
                             onClick = { selectedTab = 2 },
+                            icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                            label = { Text("Hospitales") }
+                        )
+                        NavigationBarItem(
+                            selected = selectedTab == 3,
+                            onClick = { selectedTab = 3 },
                             icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
                             label = { Text("Citas") }
                         )
@@ -94,14 +96,26 @@ fun HomeScreen(
                         NavigationBarItem(
                             selected = selectedTab == 0,
                             onClick = { selectedTab = 0 },
-                            icon = { Icon(Icons.Default.Search, contentDescription = null) },
-                            label = { Text("Pacientes") }
+                            icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                            label = { Text("Inicio") }
                         )
                         NavigationBarItem(
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 },
+                            icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                            label = { Text("Mi Perfil") }
+                        )
+                        NavigationBarItem(
+                            selected = selectedTab == 2,
+                            onClick = { selectedTab = 2 },
+                            icon = { Icon(Icons.Default.Search, contentDescription = null) },
+                            label = { Text("Pacientes") }
+                        )
+                        NavigationBarItem(
+                            selected = selectedTab == 3,
+                            onClick = { selectedTab = 3 },
                             icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                            label = { Text("Hospitales & Staff") }
+                            label = { Text("Hospitales") }
                         )
                     }
                     HomeRole.Unsupported -> {}
@@ -117,17 +131,19 @@ fun HomeScreen(
             when (homeRole) {
                 HomeRole.Patient -> {
                     when (selectedTab) {
-                        0 -> PatientProfileScreen(
+                        0 -> InicioScreen(session = session, onNavigateToTab = { selectedTab = it })
+                        1 -> PatientProfileScreen(
                             viewModel = profileViewModel,
                             token = session.token,
+                            onLogout = onLogout,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        1 -> HospitalDirectoryScreen(
+                        2 -> HospitalDirectoryScreen(
                             viewModel = hospitalViewModel,
                             token = session.token,
                             isStaff = false
                         )
-                        2 -> CitasScreen(
+                        3 -> CitasScreen(
                             viewModel = citasViewModel,
                             token = session.token,
                             pacienteId = session.user.id?.toString() ?: "P-001"
@@ -136,7 +152,9 @@ fun HomeScreen(
                 }
                 HomeRole.Doctor -> {
                     when (selectedTab) {
-                        0 -> PatientSearchScreen(
+                        0 -> InicioScreen(session = session, onNavigateToTab = { selectedTab = it })
+                        1 -> DoctorProfileScreen(session = session, onLogout = onLogout)
+                        2 -> PatientSearchScreen(
                             viewModel = searchViewModel,
                             medicalHistoryViewModel = patientMedicalHistoryViewModel,
                             atencionesViewModel = patientAtencionesViewModel,
@@ -144,7 +162,7 @@ fun HomeScreen(
                             isDemoMode = BuildConfig.USE_MOCK_API,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        1 -> HospitalDirectoryScreen(
+                        3 -> HospitalDirectoryScreen(
                             viewModel = hospitalViewModel,
                             token = session.token,
                             isStaff = true
@@ -161,6 +179,70 @@ fun HomeScreen(
                     Text("Contacta al administrador para revisar el rol de la cuenta.")
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun DoctorProfileScreen(
+    session: AuthSession,
+    onLogout: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text("Perfil Profesional del Médico", style = MaterialTheme.typography.titleLarge)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(72.dp),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        AsyncImage(
+                            model = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300",
+                            contentDescription = "Foto del doctor",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    Column {
+                        Text(session.user.name ?: "Dr. Médico EssAid", style = MaterialTheme.typography.titleMedium)
+                        Text(session.user.email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
+                        Text("Rol: Médico Especialista", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+                HorizontalDivider()
+                Text("Colegiatura CMP: CMP 45892", style = MaterialTheme.typography.bodyMedium)
+                Text("Hospital Asignado: Hospital Norte EssAid", style = MaterialTheme.typography.bodyMedium)
+                Text("Especialidad: Medicina General y Cardiología", style = MaterialTheme.typography.bodyMedium)
+                Text("Estado: Activo en sistema EssAid", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedButton(
+            onClick = onLogout,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.ExitToApp, contentDescription = null)
+            Spacer(modifier = Modifier.size(8.dp))
+            Text("Cerrar Sesión")
         }
     }
 }

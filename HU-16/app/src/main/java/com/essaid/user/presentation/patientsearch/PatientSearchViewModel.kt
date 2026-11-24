@@ -57,7 +57,7 @@ class PatientSearchViewModel(
     }
 
     fun setSessionToken(token: String) {
-        searchRequests.value = searchRequests.value.copy(token = token)
+        searchRequests.value = searchRequests.value.copy(token = token, query = _uiState.value.query)
     }
 
     fun retry(token: String) {
@@ -83,26 +83,6 @@ class PatientSearchViewModel(
 
     private suspend fun search(token: String, rawQuery: String) {
         val query = rawQuery.trim()
-        if (query.isBlank()) {
-            _uiState.value = _uiState.value.copy(status = PatientSearchStatus.Idle)
-            return
-        }
-
-        val validationMessage = when {
-            query.all(Char::isDigit) && query.length != DNI_LENGTH ->
-                "Para buscar por DNI, ingresa los $DNI_LENGTH dígitos."
-            query.any { !it.isDigit() } && query.length < MIN_NAME_QUERY_LENGTH ->
-                "Ingresa al menos $MIN_NAME_QUERY_LENGTH caracteres del nombre o apellido."
-            else -> null
-        }
-        if (validationMessage != null) {
-            _uiState.value = _uiState.value.copy(
-                status = PatientSearchStatus.ValidationError,
-                patients = emptyList(),
-                message = validationMessage,
-            )
-            return
-        }
 
         if (token.isBlank()) {
             _uiState.value = _uiState.value.copy(
@@ -111,6 +91,24 @@ class PatientSearchViewModel(
                 message = "No hay una sesión válida para buscar pacientes.",
             )
             return
+        }
+
+        if (query.isNotBlank()) {
+            val validationMessage = when {
+                query.all(Char::isDigit) && query.length != DNI_LENGTH ->
+                    "Para buscar por DNI, ingresa los $DNI_LENGTH dígitos."
+                query.any { !it.isDigit() } && query.length < MIN_NAME_QUERY_LENGTH ->
+                    "Ingresa al menos $MIN_NAME_QUERY_LENGTH caracteres del nombre o apellido."
+                else -> null
+            }
+            if (validationMessage != null) {
+                _uiState.value = _uiState.value.copy(
+                    status = PatientSearchStatus.ValidationError,
+                    patients = emptyList(),
+                    message = validationMessage,
+                )
+                return
+            }
         }
 
         _uiState.value = _uiState.value.copy(

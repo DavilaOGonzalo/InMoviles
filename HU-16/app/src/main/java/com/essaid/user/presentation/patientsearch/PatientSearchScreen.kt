@@ -48,6 +48,9 @@ fun PatientSearchScreen(
 
     LaunchedEffect(token) {
         viewModel.setSessionToken(token)
+        if (state.patients.isEmpty() && state.query.isBlank()) {
+            viewModel.onQueryChanged("")
+        }
     }
 
     Column(
