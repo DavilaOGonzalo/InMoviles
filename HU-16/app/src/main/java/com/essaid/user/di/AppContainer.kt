@@ -1,21 +1,16 @@
 package com.essaid.user.di
 
 import com.essaid.user.BuildConfig
-import com.essaid.user.data.remote.DjangoJwtLoginHttpClient
 import com.essaid.user.data.remote.DjangoPatientProfileHttpClient
-import com.essaid.user.data.remote.DjangoRegistrationHttpClient
 import com.essaid.user.data.remote.MockPatientProfileDataSource
-import com.essaid.user.data.remote.DjangoPatientSearchHttpClient
-import com.essaid.user.data.remote.MockPatientSearchDataSource
 import com.essaid.user.data.remote.MockUserLoginDataSource
 import com.essaid.user.data.remote.MockUserRegistrationDataSource
 import com.essaid.user.data.remote.PatientProfileDataSource
-import com.essaid.user.data.remote.DjangoPatientMedicalHistoryHttpClient
 import com.essaid.user.data.remote.MockPatientMedicalHistoryDataSource
 import com.essaid.user.data.remote.PatientMedicalHistoryDataSource
-import com.essaid.user.data.remote.DjangoPatientAtencionesHttpClient
 import com.essaid.user.data.remote.MockPatientAtencionesDataSource
 import com.essaid.user.data.remote.PatientAtencionesDataSource
+import com.essaid.user.data.remote.MockPatientSearchDataSource
 import com.essaid.user.data.remote.PatientSearchDataSource
 import com.essaid.user.data.remote.UserLoginDataSource
 import com.essaid.user.data.remote.UserRegistrationDataSource
@@ -34,8 +29,16 @@ import com.essaid.user.data.repository.UserRegistrationRepository
 import com.essaid.user.data.repository.HospitalServicesRepository
 import com.essaid.user.data.repository.CitaRepository
 import com.essaid.user.data.repository.HospitalRepository
+import com.essaid.user.data.remote.HospitalDataSource
 import com.essaid.user.data.remote.MockHospitalDataSource
+import com.essaid.user.data.remote.SupabaseHospitalDataSource
+import com.essaid.user.data.remote.SupabasePatientSearchDataSource
 import com.essaid.user.data.remote.MockHospitalServicesAndCitasDataSource
+import com.essaid.user.data.remote.SupabasePatientAtencionesHttpClient
+import com.essaid.user.data.remote.SupabaseLoginHttpClient
+import com.essaid.user.data.remote.SupabaseRegistrationHttpClient
+import com.essaid.user.data.remote.SupabasePatientProfileHttpClient
+import com.essaid.user.data.remote.SupabasePatientMedicalHistoryHttpClient
 
 object AppContainer {
     val registrationRepository: UserRegistrationRepository by lazy {
@@ -71,48 +74,55 @@ object AppContainer {
     }
 
     val hospitalRepository: HospitalRepository by lazy {
-        HospitalRepository(MockHospitalDataSource())
+        HospitalRepository(hospitalDataSource())
     }
 
     private fun registrationDataSource(): UserRegistrationDataSource =
         if (BuildConfig.USE_MOCK_API) {
             MockUserRegistrationDataSource()
         } else {
-            DjangoRegistrationHttpClient(BuildConfig.ESSAID_API_BASE_URL)
+            SupabaseRegistrationHttpClient()
         }
 
     private fun loginDataSource(): UserLoginDataSource =
         if (BuildConfig.USE_MOCK_API) {
             MockUserLoginDataSource()
         } else {
-            DjangoJwtLoginHttpClient(BuildConfig.ESSAID_API_BASE_URL)
+            SupabaseLoginHttpClient()
         }
 
     private fun patientProfileDataSource(): PatientProfileDataSource =
         if (BuildConfig.USE_MOCK_API) {
             MockPatientProfileDataSource()
         } else {
-            DjangoPatientProfileHttpClient(BuildConfig.ESSAID_API_BASE_URL)
+            SupabasePatientProfileHttpClient()
         }
 
     private fun patientSearchDataSource(): PatientSearchDataSource =
         if (BuildConfig.USE_MOCK_API) {
             MockPatientSearchDataSource()
         } else {
-            DjangoPatientSearchHttpClient(BuildConfig.ESSAID_API_BASE_URL)
+            SupabasePatientSearchDataSource()
         }
 
     private fun patientMedicalHistoryDataSource(): PatientMedicalHistoryDataSource =
         if (BuildConfig.USE_MOCK_API) {
             MockPatientMedicalHistoryDataSource()
         } else {
-            DjangoPatientMedicalHistoryHttpClient(BuildConfig.ESSAID_API_BASE_URL)
+            SupabasePatientMedicalHistoryHttpClient()
         }
 
     private fun patientAtencionesDataSource(): PatientAtencionesDataSource =
         if (BuildConfig.USE_MOCK_API) {
             MockPatientAtencionesDataSource()
         } else {
-            DjangoPatientAtencionesHttpClient(BuildConfig.ESSAID_API_BASE_URL)
+            SupabasePatientAtencionesHttpClient()
+        }
+
+    private fun hospitalDataSource(): HospitalDataSource =
+        if (BuildConfig.USE_MOCK_API) {
+            MockHospitalDataSource()
+        } else {
+            SupabaseHospitalDataSource()
         }
 }
