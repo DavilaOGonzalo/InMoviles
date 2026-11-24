@@ -12,7 +12,7 @@ android {
         }
     }
 
-    val useMockApi = providers.gradleProperty("essaid.useMockApi").orElse("true").get().toBoolean()
+    val useMockApi = providers.gradleProperty("essaid.useMockApi").orElse("false").get().toBoolean()
     val apiBaseUrl = providers.gradleProperty("essaid.apiBaseUrl")
         .orElse("http://10.0.2.2:8000")
         .get()
@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
